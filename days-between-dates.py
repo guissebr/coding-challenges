@@ -1,71 +1,93 @@
-# Given your birthday and the current date, calculate your age in days.
-# Account for leap days.
+# Credit goes to Websten from forums
 #
-# Assume that the birthday and current date are correct dates (and no
-# time travel).
-#
+# Use Dave's suggestions to finish your daysBetweenDates
+# procedure. It will need to take into account leap years
+# in addition to the correct number of days in each month.
 
-
-def daysBetweenDates(year1, month1, day1, year2, month2, day2):
-    #returns the total number of days that have passed between two dates; accounts for leap years via the numOfLeapYears and daysSoFar functions.
-    #c = complete
-    if year2 - year1 <=1:
-        c_year = 0
+def nextDay(year, month, day):
+    """Simple version: assume every month has 30 days"""
+    if day < daysInMonth(month, year):
+        return year, month, day + 1
     else:
-        if year2 - year1 > 1 and year2-year1 < 3:
-            c_year = 1
-    c_years = year2 - year1 -1
-    c_leap_years = numOfLeapYears(year1, year2)
-    total_days = c_years * 365 + c_leap_years + daysSoFar(year2, month2, day2) + (365-daysSoFar(year1, month1, day1))
-    return total_days
+        if month == 12:
+            return year + 1, 1, 1
+        else:
+            return year, month + 1, 1
 
-
-def numOfLeapYears(year1, year2):
-    #returns the number of leap years that have passes between two given years (non-inclusive); leverages the isLeapYear function.
-    leap_years = 0
-    while year1+1 < year2:
-        if isLeapYear(year1+1) == True:
-            leap_years +=1
-            year1+=1
-        year1+=1
-    return leap_years
+def daysInMonth(month, year):
+    days_per_month = [31,28,31,30,31,30,31,31,30,31,30,31]
+    if isLeapYear(year):
+        days_per_month = [31,29,31,30,31,30,31,31,30,31,30,31]
+    return days_per_month[month-1]
 
 def isLeapYear(year):
-    #for a given year, returns True if it's a leap year and False otherwise.
     return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
-def daysSoFar(year, month, day):
-    #returnsthe number of days that have passed so far in a given year for the given month and day.
-    daysOfMonths = [31,28,31,30,31,30,31,31,30,31,30,31]
-    if isLeapYear(year) and ((month == 2 and day > 28) or month > 2)  == True:
-        days = 1
-        counter = 0
-        while counter < month-1:
-            days = days + daysOfMonths[counter]
-            counter +=1
-        days = days + day
-        return days
+def dateIsBefore(year1, month1, day1, year2, month2, day2):
+    """Returns True if year1-month1-day1 is before year2-month2-day2. Otherwise, returns False."""
+    if year1 < year2:
+        return True
+    if year1 == year2:
+        if month1 < month2:
+            return True
+        if month1 == month2:
+            return day1 < day2
+    return False
+
+def daysBetweenDates(year1, month1, day1, year2, month2, day2):
+    """Returns the number of days between year1/month1/day1
+       and year2/month2/day2. Assumes inputs are valid dates
+       in Gregorian calendar."""
+    # program defensively! Add an assertion if the input is not valid!
+    assert not dateIsBefore(year2, month2, day2, year1, month1, day1)
     days = 0
-    counter = 0
-    while counter < month-1:
-        days = days+ daysOfMonths[counter]
-        counter +=1
-    days = days + day
+    while dateIsBefore(year1, month1, day1, year2, month2, day2):
+        year1, month1, day1 = nextDay(year1, month1, day1)
+        days += 1
     return days
 
-
-# Test routine
 def test():
-    test_cases = [((2012,1,1,2012,2,28), 58),
-                  ((2012,1,1,2012,3,1), 60),
-                  ((2011,6,30,2012,6,30), 366),
-                  ((2011,1,1,2012,8,8), 585 ),
-                  ((1900,1,1,1999,12,31), 36523)]
-    for (args, answer) in test_cases:
+    """Test for isLeapYear"""
+    test_cases1 = [(2000, True), (1900, False)]
+
+    for (arg, answer) in test_cases1:
+        result = isLeapYear(arg)
+        if result == answer:
+            print "Passed!"
+        else:
+            print "Failed!"
+
+    """Tests for daysBetweenDates"""
+    test_cases2 = [((2012,1,1,2012,2,28), 58),
+                   ((2012,1,1,2012,3,1), 60),
+                   ((2011,6,30,2012,6,30), 366),
+                   ((2011,1,1,2012,8,8), 585 ),
+                   ((1900,1,1,1999,12,31), 36523)]
+    for (args, answer) in test_cases2:
         result = daysBetweenDates(*args)
         if result != answer:
             print "Test with data:", args, "failed"
         else:
             print "Test case passed!"
+
+    """Tests for daysInMonth"""
+    test_cases3 = [((2, 2000),29), ((2, 1900),28)]
+
+    for (args, answer) in test_cases3:
+        result = daysInMonth(*args)
+        if result == answer:
+            print "Passed!"
+        else:
+            print "Failed!"
+
+    """Tests for nextDay"""
+    test_cases4 = [((2000,2,28),(2000,2,29)), ((2000,12,31),(2001,1,1)),((2001,2,28),(2001,3,1))]
+
+    for (args, answer) in test_cases4:
+        result = nextDay(*args)
+        if result == answer:
+            print "Passed!"
+        else:
+            print "Failed!"
 
 test()
